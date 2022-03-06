@@ -16,13 +16,12 @@ func main() {
 
 	// initialize server
 	e := echo.New()
-	e.Use(middleware.Gzip())
-	e.Use(middleware.BodyLimit(config.BodyLimit))
 	e.Use(middleware.Logger())
+	e.Use(middleware.BodyLimit(config.BodyLimit))
 
 	// submission related endpoints
-	e.GET("/submission/:id", submissionHandler.Get)
 	e.POST("/submission", submissionHandler.Create)
+	e.GET("/result/:token", submissionHandler.GetResult)
 
 	e.Logger.Fatal(e.Start(config.Address))
 }
