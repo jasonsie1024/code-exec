@@ -98,9 +98,7 @@ func (box *Sandbox) Run(command []string, limits models.Limits, stdin []byte) *m
 		Stdin.Write(stdin)
 	}
 
-	if output, err := cmd.CombinedOutput(); err != nil {
-		fmt.Println(string(output), err)
-	}
+	cmd.Run()
 	meta := ParseMetafile(box.Path + "/meta")
 
 	result := &models.Result{
