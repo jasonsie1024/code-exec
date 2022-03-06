@@ -10,3 +10,4 @@ COPY . /app
 WORKDIR /app
 RUN go build cmd/server/server.go
 
+CMD ./server
