@@ -34,7 +34,7 @@ var config Config = Config{
 
 // Load config from .env and environment variable, only need to call once in one execution.
 func (c *Config) Load() *Config {
-	if err := cfg.From(".env").FromEnv().To(c); err != nil {
+	if err := cfg.FromOptional(".env").FromEnv().To(c); err != nil {
 		panic(err)
 	}
 	return c
