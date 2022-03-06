@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jason-plainlog/code-exec/internal/models"
+	"github.com/jason-plainlog/code-exec/internal/runners"
 	"github.com/labstack/echo/v4"
 )
 
@@ -27,6 +28,19 @@ func (h *SubmissionHandler) Create(c echo.Context) error {
 	} else if err := submission.Check(); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	runner, ok := runners.Runners[submission.Language]
+	if !ok {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid language")
+	}
+
+	resultChan := runner.Handle(submission)
+	go func() {
+		for range submission.Tasks {
+			result := <-resultChan
+			result.SendCallback()
+		}
+	}()
 
 	tokens := []uuid.UUID{}
 	for _, task := range submission.Tasks {

@@ -1,7 +1,10 @@
 package models
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,6 +42,8 @@ type (
 	}
 
 	Result struct {
+		Token uuid.UUID `json:"token"`
+
 		Stdout        []byte `json:"stdout"`
 		Stderr        []byte `json:"stderr"`
 		CompileOutput []byte `json:"compile_output,omitempty"`
@@ -50,6 +55,8 @@ type (
 		Message   string    `json:"message"`
 		Status    string    `json:"status"`
 		Timestamp time.Time `json:"timestamp"`
+
+		CallbackURL *string `json:"-"`
 	}
 )
 
@@ -107,4 +114,41 @@ func (l *Limits) Check() error {
 	}
 
 	return nil
+}
+
+func (r *Result) SendCallback() {
+	if r.CallbackURL == nil {
+		return
+	}
+
+	body, _ := json.Marshal(r)
+
+	go func() {
+		client := http.Client{
+			Timeout: time.Second * 30,
+		}
+
+		// retry at most 3 times
+		for i := 0; i < 3; i++ {
+			req, err := http.NewRequest(http.MethodPut, *r.CallbackURL, bytes.NewBuffer(body))
+			if err != nil {
+				return
+			}
+
+			req.Header.Set("Content-Type", "application/json")
+
+			resp, err := client.Do(req)
+			if err != nil || resp.StatusCode == 200 {
+				return
+			}
+		}
+	}()
+}
+
+var MaximumLimits Limits = Limits{
+	Time:     config.GetConfig().MaxTime,
+	Memory:   config.GetConfig().MaxMemory,
+	Filesize: config.GetConfig().MaxFilesize,
+	Process:  config.GetConfig().MaxProcess,
+	Network:  true,
 }
