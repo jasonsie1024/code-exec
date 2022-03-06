@@ -14,6 +14,9 @@ type Config struct {
 	MaxMemory   int     `config:"MAX_MEMORY"`
 	MaxProcess  int     `config:"MAX_PROCESS"`
 	MaxFilesize int     `config:"MAX_FILESIZE"`
+
+	// Storage Configurations
+	Bucket string `config:"BUCKET"`
 }
 
 // The default values of the config.

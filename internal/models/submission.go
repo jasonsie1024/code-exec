@@ -2,11 +2,14 @@ package models
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
 	"github.com/jason-plainlog/code-exec/internal/config"
 )
@@ -122,7 +125,6 @@ func (r *Result) SendCallback() {
 	}
 
 	body, _ := json.Marshal(r)
-
 	go func() {
 		client := http.Client{
 			Timeout: time.Second * 30,
@@ -134,7 +136,6 @@ func (r *Result) SendCallback() {
 			if err != nil {
 				return
 			}
-
 			req.Header.Set("Content-Type", "application/json")
 
 			resp, err := client.Do(req)
@@ -143,6 +144,14 @@ func (r *Result) SendCallback() {
 			}
 		}
 	}()
+}
+
+func (r *Result) Save(object *storage.ObjectHandle) {
+	writer := object.NewWriter(context.Background())
+	defer writer.Close()
+
+	body, _ := json.Marshal(r)
+	io.Copy(writer, bytes.NewBuffer(body))
 }
 
 var MaximumLimits Limits = Limits{

@@ -1,22 +1,37 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/google/uuid"
+	cfg "github.com/jason-plainlog/code-exec/internal/config"
 	"github.com/jason-plainlog/code-exec/internal/models"
 	"github.com/jason-plainlog/code-exec/internal/runners"
 	"github.com/labstack/echo/v4"
+
+	"cloud.google.com/go/storage"
 )
 
 type (
 	SubmissionHandler struct {
+		StorageClient *storage.Client
 	}
 )
 
-func (h *SubmissionHandler) GetResult(c echo.Context) error {
+var config = cfg.GetConfig()
 
-	return nil
+func (h *SubmissionHandler) GetResult(c echo.Context) error {
+	token := c.Param("token")
+	resultDoc := h.StorageClient.Bucket(config.Bucket).Object(token)
+
+	reader, err := resultDoc.NewReader(context.Background())
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+	defer reader.Close()
+
+	return c.Stream(http.StatusOK, "application/json", reader)
 }
 
 func (h *SubmissionHandler) Create(c echo.Context) error {
@@ -36,9 +51,11 @@ func (h *SubmissionHandler) Create(c echo.Context) error {
 
 	resultChan := runner.Handle(submission)
 	go func() {
+		bucket := h.StorageClient.Bucket(config.Bucket)
 		for range submission.Tasks {
 			result := <-resultChan
 			result.SendCallback()
+			result.Save(bucket.Object(result.Token.String()))
 		}
 	}()
 
