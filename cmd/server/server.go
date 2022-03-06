@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"os"
 
 	"github.com/jason-plainlog/code-exec/internal/config"
 	"github.com/jason-plainlog/code-exec/internal/handlers"
@@ -17,8 +15,6 @@ import (
 func main() {
 	// load configuration from .env and environment variable
 	config := config.GetConfig().Load()
-
-	fmt.Println(os.Environ())
 
 	// initialize cloud storage client
 	storageClient, err := storage.NewClient(context.Background())

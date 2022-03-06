@@ -1,6 +1,8 @@
 package runners
 
 import (
+	"bytes"
+
 	"github.com/jason-plainlog/code-exec/internal/isolate"
 	"github.com/jason-plainlog/code-exec/internal/models"
 )
@@ -39,6 +41,11 @@ func (r *python3Runner) Execute(s *models.Submission, t *models.Task) *models.Re
 	}, t.Limits, t.Stdin)
 	result.CallbackURL = t.CallbackURL
 	result.Token = t.Token
+	if result.Status == "Accepted" &&
+		t.ExpectedOutput != nil &&
+		!bytes.Equal(result.Stdout, t.ExpectedOutput) {
+		result.Status = "Wrong Answer"
+	}
 
 	return result
 }

@@ -32,7 +32,7 @@ type (
 		Token uuid.UUID `json:"token"`
 
 		CommandLineArguments *string `json:"command_line_arguments"`
-		ExpectedOutput       *string `json:"expected_output"`
+		ExpectedOutput       []byte  `json:"expected_output"`
 		CallbackURL          *string `json:"callback_url"`
 	}
 
