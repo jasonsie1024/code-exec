@@ -26,6 +26,7 @@ func main() {
 	submissionHandler := &handlers.SubmissionHandler{
 		StorageClient: storageClient,
 	}
+	infoHandler := &handlers.InfoHandler{}
 
 	// initialize server
 	e := echo.New()
@@ -35,6 +36,9 @@ func main() {
 	// submission related endpoints
 	e.POST("/submission", submissionHandler.Create)
 	e.GET("/result/:token", submissionHandler.GetResult)
+
+	// info related endpoints
+	e.GET("/config", infoHandler.ConfigInfo)
 
 	e.Logger.Fatal(e.Start(config.Address))
 }

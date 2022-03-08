@@ -4,19 +4,19 @@ import cfg "github.com/JeremyLoy/config"
 
 type Config struct {
 	// Server Configurations
-	Address    string `config:"ADDRESS"`    // Address for web api service to listen, default to ":8000"
-	BodyLimit  string `config:"BODY_LIMIT"` // Maximum request body size, default to "4M"
-	MaxSandbox int    `config:"MAX_SANDBOX"`
+	Address    string `config:"ADDRESS" json:"-"`    // Address to listen, default to ":8000"
+	BodyLimit  string `config:"BODY_LIMIT" json:"-"` // Maximum request body size, default to "4M"
+	MaxSandbox int    `config:"MAX_SANDBOX" json:"-"`
 
 	// Submission Configurations
-	MaxTask     int     `config:"MAX_TASK"`
-	MaxTime     float32 `config:"MAX_TIME"`
-	MaxMemory   int     `config:"MAX_MEMORY"`
-	MaxProcess  int     `config:"MAX_PROCESS"`
-	MaxFilesize int     `config:"MAX_FILESIZE"`
+	MaxTask     int     `config:"MAX_TASK" json:"max_task"`
+	MaxTime     float32 `config:"MAX_TIME" json:"max_time"`
+	MaxMemory   int     `config:"MAX_MEMORY" json:"max_memory"`
+	MaxProcess  int     `config:"MAX_PROCESS" json:"max_process"`
+	MaxFilesize int     `config:"MAX_FILESIZE" json:"max_filesize"`
 
 	// Storage Configurations
-	Bucket string `config:"BUCKET"`
+	Bucket string `config:"BUCKET" json:"-"`
 }
 
 // The default values of the config.
