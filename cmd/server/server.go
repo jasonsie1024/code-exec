@@ -18,9 +18,11 @@ func main() {
 	e.Use(middleware.BodyLimit(config.BodyLimit))
 
 	// initizlize handlers & register routes
-	// info handler
 	infoHandler := handlers.InfoHandler{}
 	infoHandler.RegisterRoutes(e)
+
+	submissionHandler := handlers.SubmissionHandler{}
+	submissionHandler.RegisterRoutes(e)
 
 	// start server
 	e.Logger.Fatal(e.Start(config.Address))
