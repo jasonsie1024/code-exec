@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	// load config
+	// load language.json files and config
+	config.GetLanguages()
 	config := config.GetConfig().Load()
 
 	// initialize server & middlewares
