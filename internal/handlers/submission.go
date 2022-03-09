@@ -28,7 +28,10 @@ func (h *SubmissionHandler) Create(c echo.Context) error {
 	}
 
 	// save submission / task to storage
-	submission.Save(h.Storage)
+	err := submission.Save(h.Storage)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create submission and tasks")
+	}
 
 	// call runner to handle submission
 
