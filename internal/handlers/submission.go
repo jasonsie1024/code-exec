@@ -3,11 +3,13 @@ package handlers
 import (
 	"net/http"
 
+	"cloud.google.com/go/storage"
 	"github.com/jason-plainlog/code-exec/internal/models"
 	"github.com/labstack/echo/v4"
 )
 
 type SubmissionHandler struct {
+	Storage *storage.Client
 }
 
 func (h *SubmissionHandler) RegisterRoutes(e *echo.Echo) {
@@ -26,6 +28,7 @@ func (h *SubmissionHandler) Create(c echo.Context) error {
 	}
 
 	// save submission / task to storage
+	submission.Save(h.Storage)
 
 	// call runner to handle submission
 

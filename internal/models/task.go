@@ -3,7 +3,9 @@ package models
 import (
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
+	"github.com/jason-plainlog/code-exec/internal/config"
 )
 
 type (
@@ -34,4 +36,11 @@ func (t *Task) Check() error {
 	}
 
 	return nil
+}
+
+func (t *Task) Save(storage *storage.Client) error {
+	config := config.GetConfig()
+	object := storage.Bucket(config.TaskBucket).Object(t.Token.String())
+
+	return StorageSave(object, t.Result)
 }

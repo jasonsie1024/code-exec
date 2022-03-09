@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
 	"github.com/jason-plainlog/code-exec/internal/config"
 )
@@ -49,4 +50,48 @@ func (s *Submission) Check() error {
 	s.Timestamp = time.Now()
 
 	return nil
+}
+
+type StoredSubmission struct {
+	Token     uuid.UUID `json:"token"`
+	Timestamp time.Time `json:"timestamp"`
+
+	Langauge   string `json:"langauge"`
+	SourceCode []byte `json:"source_code"`
+
+	Tasks []uuid.UUID `json:"tasks"`
+}
+
+func (s *Submission) Save(storage *storage.Client) error {
+	languages := config.GetLanguages()
+	config := config.GetConfig()
+
+	object := storage.Bucket(config.SubmissionBucket).Object(s.Token.String())
+
+	// save tasks first
+	errChan := make(chan error)
+	for i := range s.Tasks {
+		go func(task *Task) {
+			errChan <- task.Save(storage)
+		}(&s.Tasks[i])
+	}
+	for range s.Tasks {
+		if err := <-errChan; err != nil {
+			return err
+		}
+	}
+
+	// save submission
+	store := StoredSubmission{
+		Token:      s.Token,
+		Timestamp:  s.Timestamp,
+		Langauge:   languages[s.LanguageId].Name,
+		SourceCode: s.SourceCode,
+		Tasks:      []uuid.UUID{},
+	}
+	for _, task := range s.Tasks {
+		store.Tasks = append(store.Tasks, task.Token)
+	}
+
+	return StorageSave(object, store)
 }
