@@ -3,5 +3,5 @@
     "name": "Python 3.9.7",
     "source_file": "source.py",
     "compile_command": null,
-    "run_command": "/usr/bin/python3 source.py"
+    "run_command": "/usr/bin/python3 source.py %s"
 }
