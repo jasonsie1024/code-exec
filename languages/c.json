@@ -1,0 +1,7 @@
+{
+    "id": 1,
+    "name": "C (gcc 10.3.1)",
+    "source_file": "source.c",
+    "compile_command": "/usr/bin/gcc %s -o a.out source.c",
+    "run_command": "./a.out %s"
+}

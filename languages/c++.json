@@ -1,0 +1,7 @@
+{
+    "id": 2,
+    "name": "C++ (g++ 10.3.1)",
+    "source_file": "source.cpp",
+    "compile_command": "/usr/bin/g++ %s -o a.out source.cpp",
+    "run_command": "./a.out %s"
+}

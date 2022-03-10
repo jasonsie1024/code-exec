@@ -3,6 +3,8 @@ package isolate
 import (
 	"os"
 	"strings"
+
+	"github.com/jason-plainlog/code-exec/internal/models"
 )
 
 func ParseMetafile(metafile string) map[string]string {
@@ -23,13 +25,13 @@ func ParseMetafile(metafile string) map[string]string {
 
 	switch dict["status"] {
 	case "":
-		dict["status"] = "Accepted"
+		dict["status"] = string(models.Accepted)
 	case "RE":
-		dict["status"] = "Runtime Error"
+		dict["status"] = string(models.RuntimeError)
 	case "TO":
-		dict["status"] = "Time Limit Exceed"
+		dict["status"] = string(models.TimeLimitExceeded)
 	default:
-		dict["status"] = "Internal Error"
+		dict["status"] = string(models.InternalError)
 	}
 
 	return dict

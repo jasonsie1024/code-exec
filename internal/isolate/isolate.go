@@ -11,71 +11,77 @@ import (
 	"github.com/jason-plainlog/code-exec/internal/models"
 )
 
-type (
-	Sandbox struct {
-		Id   string
-		Path string
+type Sandbox struct {
+	Id          string
+	Path        string
+	initialized bool
+}
 
-		inUse bool
+var availableSandbox chan *Sandbox
+
+// should be called once when server starts
+func Init() {
+	if availableSandbox != nil {
+		return
 	}
-)
 
-var availableSandboxes chan *Sandbox
-
-func GetSandbox() *Sandbox {
-	if availableSandboxes == nil {
-		config := config.GetConfig()
-		availableSandboxes = make(chan *Sandbox, config.MaxSandbox)
-
-		go func() {
-			for id := 0; id < config.MaxSandbox; id++ {
-				availableSandboxes <- &Sandbox{
-					Id: fmt.Sprint(id),
-				}
+	config := config.GetConfig()
+	availableSandbox = make(chan *Sandbox, config.MaxSandbox)
+	go func() {
+		for i := 0; i < config.MaxSandbox; i++ {
+			availableSandbox <- &Sandbox{
+				Id:          fmt.Sprint(i),
+				initialized: false,
 			}
-		}()
-	}
-
-	sandbox := <-availableSandboxes
-	for sandbox.init() != nil {
-		availableSandboxes <- sandbox
-		sandbox = <-availableSandboxes
-	}
-
-	return sandbox
+		}
+	}()
 }
 
-func (box *Sandbox) init() error {
-	err := exec.Command("isolate", "--box-id", box.Id, "--cg", "--cleanup").Run()
+func GetSandbox() (*Sandbox, error) {
+	sandbox := <-availableSandbox
+
+	// clean up first
+	exec.Command("isolate", "--cg", "--box-id", sandbox.Id, "--cleanup").Run()
+
+	// initialize isolate sandbox
+	output, err := exec.Command("isolate", "--cg", "--box-id", sandbox.Id, "--init").Output()
 	if err != nil {
-		return err
+		availableSandbox <- sandbox
+		return nil, err
 	}
 
-	output, err := exec.Command("isolate", "--box-id", box.Id, "--cg", "--init").Output()
-	if err != nil {
-		return err
-	}
+	sandbox.Path = strings.TrimSuffix(string(output), "\n")
+	sandbox.initialized = true
 
-	box.Path = strings.TrimSuffix(string(output), "\n")
-	box.inUse = true
-	return nil
+	return sandbox, nil
 }
 
-func (box *Sandbox) CleanUp() error {
-	if !box.inUse {
-		return fmt.Errorf("sandbox is already cleaned up")
+func (box *Sandbox) Prepare(submission *models.Submission) error {
+	if submission.AdditionalFiles != nil {
+		// write zip file
+		err := os.WriteFile(box.Path+"/box/files.zip", submission.AdditionalFiles, 0644)
+		if err != nil {
+			return err
+		}
+
+		// unzip with sandbox
+		result := box.Run([]string{"/usr/bin/unzip", "files.zip"}, models.MaximumLimit, nil)
+		if result.Status != models.Accepted {
+			return fmt.Errorf("failed to unzip additional_files")
+		}
+
+		// remove zip file
+		os.Remove(box.Path + "/box/files.zip")
 	}
 
-	if err := exec.Command("isolate", "--box-id", box.Id, "--cg", "--cleanup").Run(); err != nil {
-		return err
-	}
+	languages := config.GetLanguages()
+	lang := languages[submission.LanguageId]
+	err := os.WriteFile(box.Path+"/box/"+lang.SourceFile, submission.SourceCode, 0644)
 
-	box.inUse = false
-	availableSandboxes <- box
-	return nil
+	return err
 }
 
-func (box *Sandbox) Run(command []string, limits models.Limits, stdin []byte) *models.Result {
+func (box *Sandbox) Run(cmd []string, limits models.Limits, stdin []byte) *models.Result {
 	// build up command: `isolate {boxid, limits} --run {command, arguments}`
 	args := []string{
 		"--box-id", box.Id, "--cg",
@@ -89,22 +95,22 @@ func (box *Sandbox) Run(command []string, limits models.Limits, stdin []byte) *m
 		args = append(args, "--share-net")
 	}
 	args = append(args, "--run", "--")
-	args = append(args, command...)
+	args = append(args, cmd...)
 
 	// execute and write stdin if exist
-	cmd := exec.Command("isolate", args...)
+	command := exec.Command("isolate", args...)
 	if stdin != nil {
-		Stdin, _ := cmd.StdinPipe()
+		Stdin, _ := command.StdinPipe()
 		Stdin.Write(stdin)
 	}
 
-	if output, err := cmd.CombinedOutput(); err != nil {
+	if output, err := command.CombinedOutput(); err != nil {
 		fmt.Println(string(output), err)
 	}
 	meta := ParseMetafile(box.Path + "/meta")
 
 	result := &models.Result{
-		Status:    meta["status"],
+		Status:    models.Status(meta["status"]),
 		Message:   meta["message"],
 		Timestamp: time.Now(),
 	}
@@ -118,19 +124,17 @@ func (box *Sandbox) Run(command []string, limits models.Limits, stdin []byte) *m
 	return result
 }
 
-func (box *Sandbox) Prepare(s *models.Submission) {
-	os.WriteFile(box.Path+"/box/source", s.SourceCode, 0644)
-
-	if s.AdditionalFiles != nil {
-		// dump zip file
-		os.WriteFile(box.Path+"/box/files.zip", s.AdditionalFiles, 0644)
-
-		// safely unzip
-		box.Run([]string{
-			"/usr/bin/unzip", "-n", "files.zip",
-		}, models.MaximumLimits, nil)
-
-		// delete zip file
-		os.Remove(box.Path + "/box/files.zip")
+func (box *Sandbox) CleanUp() error {
+	if !box.initialized {
+		return fmt.Errorf("sandbox is already cleaned up")
 	}
+
+	err := exec.Command("isolate", "--cg", "--box-id", box.Id, "--cleanup").Run()
+	if err != nil {
+		return err
+	}
+	box.initialized = false
+	availableSandbox <- box
+
+	return nil
 }

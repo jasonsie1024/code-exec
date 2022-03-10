@@ -4,37 +4,42 @@ import (
 	"context"
 	"log"
 
+	"cloud.google.com/go/storage"
 	"github.com/jason-plainlog/code-exec/internal/config"
 	"github.com/jason-plainlog/code-exec/internal/handlers"
+	"github.com/jason-plainlog/code-exec/internal/isolate"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-
-	"cloud.google.com/go/storage"
 )
 
 func main() {
-	// load configuration from .env and environment variable
+	// load language.json files and config
+	config.GetLanguages()
 	config := config.GetConfig().Load()
 
-	// initialize cloud storage client
+	// setup storage client
 	storageClient, err := storage.NewClient(context.Background())
 	if err != nil {
-		log.Fatalf("Failed to create cloud storage client: %v", err)
+		log.Fatal(err)
 	}
 
-	// initialize submission handler
-	submissionHandler := &handlers.SubmissionHandler{
-		StorageClient: storageClient,
-	}
+	// initialize sandboxes
+	isolate.Init()
 
-	// initialize server
+	// initialize server & middlewares
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.BodyLimit(config.BodyLimit))
 
-	// submission related endpoints
-	e.POST("/submission", submissionHandler.Create)
-	e.GET("/result/:token", submissionHandler.GetResult)
+	// initizlize handlers & register routes
+	infoHandler := handlers.InfoHandler{}
+	infoHandler.RegisterRoutes(e)
 
+	submissionHandler := handlers.SubmissionHandler{
+		Storage: storageClient,
+	}
+	submissionHandler.RegisterRoutes(e)
+
+	// start server
 	e.Logger.Fatal(e.Start(config.Address))
 }

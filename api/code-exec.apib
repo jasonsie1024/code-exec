@@ -1,0 +1,187 @@
+FORMAT: 1A
+
+# CodeExec API Documentation
+
+## About
+[CodeExec API]() is an Online Code Execution API that allows users to run arbitrary code without installing compilers/interpreters, and is much safer for those who wanted to build a service that requires running untrusted code, for example, an Online Judge or Online IDE.
+
+CodeExec was inspired by [Judge0 API](https://judge0.com/), and after redesigning service architecture and adopting cloud computing services, we're able to provide an Online Code Execution API at a lower price with higher scalability and performance.
+
+<br/>
+
+## Getting Started
+You may visit [CodeExec API on RapidAPI]() to try on these API endpoints for free, or subscribe to a plan that fits your needs.
+
+<br/>
+<br/>
+
+# Group Submission & Task
+
+## Submission [/submission]
+
+## Create Submission [POST]
+Create submission with multiple tasks. The request should be a valid submission:
+
+**Submission**
+
+| Name (*required) | Description |
+| ---- | ----------- |
+| `source_code` * | The base64 encoded source code to be compiled and executed |
+| `language_id` * | The id of the language that source code is written in, look [language section](#server-configurations-language) for more information. | 
+| `tasks` * | The tasks to be run, the task format is explaned below |
+| `compile_options` | The extra arguments that will be passed to the compiler |
+| `additional_files` | The base64 encoded content of the zip file that will be extracted before compilation and execution. |
+
+**Task**
+
+| Name | Description |
+| --- | --- |
+| `stdin` | The base64 encoded stdin to be passed to the running program |
+| `limits` | The limits of the task, see below for more infomation about limits |
+| `command_line_arguments` | The extra arguments to be passed when executing the program |
+| `expected_output` | The expected stdout of the program, if is not null, the output will be compared and if different from expected output, the status will be set to "Wrong Answer" |
+| `callback_url` | If is given, the result will be `PUT` to the callback url |
+
+**Limits**
+
+| Name      | Description           | Default | Unit      |
+| --        | --                    | --            | --        |
+| `time`    | The time limit shared by all the process and threads   | 15.0          | second    |
+| `memory`  | The memory limit shared by all the process and threads | 262144        | kB        |
+| `filesize`| The maximum size that can be written to I/O        | 4096          | kB        |
+| `process` | The maximum amount limit of thread and process  | 1             |           |
+| `network` | Whether the program can have network access   | false         |           |
+
+
+
++ Request Create Submission (application/json)
+    
+        {
+            "source_code": "bmFtZSA9IGlucHV0KCkKcHJpbnQoZiJIZWxsbywge25hbWV9ISIpCg==",
+            "language_id": 2,
+            "tasks": [{
+                "stdin": "SmFzb24K",
+                "expected_output": "SGVsbG8sIEphc29uIQo="
+            }]
+        }
+
++ Response 200 (application/json)
+If the submission is successfully created, the response contains the submission token and all the tokens of its tasks.
+    + Body
+
+            {
+                "token": "ce78c8bc-0288-4132-ac07-91c861610812",
+                "tasks": [{
+                    "token":  "65658f40-f147-4b7b-8bb9-4d5ecb5d813e"
+                }]
+            }
+
++ Response 400 (application/json)
+If any value is not valid, a `400 Bad Request` response is returned with a message.
+    + Body
+
+            {   
+                "message": "invalid language"
+            }
+
+## Get Submission [GET /submission/{token}]
+
++ Parameters
+    + token (string) ... The unique token for the submission
+
++ Response 200 (application/json)
+    + Body
+
+            {
+                "token": "ce78c8bc-0288-4132-ac07-91c861610812",
+                "source_code": "bmFtZSA9IGlucHV0KCkKcHJpbnQoZiJIZWxsbywge25hbWV9ISIpCg==",
+                "language": "Python 3.9.7",
+                "tasks": [{
+                    "token": "65658f40-f147-4b7b-8bb9-4d5ecb5d813e",
+                    "time": 0.032,
+                    "memory": 5656,
+                    "status": "Accepted"
+                }]
+            }
+
++ Response 404 (application/json)
+If the submission doesn't exist, a `404 Not Found` error is returned.
+    + Body
+
+            {
+                "message": "Submission doesn't exist."
+            }
+
+## Task [/task]
+
+### Get Task [GET /task/{token}]
+
++ Parameters
+    + token (string) ... The unique token for the Submission
+
++ Response 200 (application/json)
+
+        {
+            "token": "65658f40-f147-4b7b-8bb9-4d5ecb5d813e",
+            "stdout": "SGVsbG8sIEphc29uIQo=",
+            "stderr": "",
+            "exit_code": 0,
+            "time": 0.032,
+            "memory": 5656,
+            "message": "",
+            "status": "Accepted",
+            "timestamp": "2022-03-07T12:53:54.424986032Z"
+        }
+
+
+# Group Server Configurations
+
+### Configuration Information [GET /config]
+Get the current configuration that server is running on.
++ Response 200 (application/json)
+
+        {
+            "max_task": 32,
+            "max_time": 15,
+            "max_memory": 262144,
+            "max_process": 16,
+            "max_filesize": 4096
+        }
+
+
+## Language [/language]
+### Get Languages [GET /languages]
+Get current available langauges on the server.
+
++ Response 200 (application/json)
+
+        [
+            {
+                "id": 1,
+                "name": "C (gcc 10.3.1)"
+            },
+            {
+                "id": 2,
+                "name": "C++ (g++ 10.3.1)"
+            },
+            {
+                "id": 3,
+                "name": "Python 3.9.7"
+            }
+        ]   
+
+### Get Language [GET /language/{id}]
+Get more specific information (how program is compiled, run) about a language supported on the server.
+
++ Parameters
+    + id (number) ... The id of language to get
+
++ Response 200 (application/json)
+
+        {
+            "id": 3,
+            "name": "Python 3.9.7",
+            "source_file": "source.py",
+            "compile_command": "",
+            "run_command": "/usr/bin/python3 source.py %s"
+        }
