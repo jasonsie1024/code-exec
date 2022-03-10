@@ -14,6 +14,14 @@ type Limits struct {
 	Network  bool    `json:"network"`
 }
 
+var MaximumLimit = Limits{
+	Time:     config.GetConfig().MaxTime,
+	Memory:   config.GetConfig().MaxMemory,
+	Filesize: config.GetConfig().MaxFilesize,
+	Process:  config.GetConfig().MaxProcess,
+	Network:  true,
+}
+
 // check limits validity
 func (l *Limits) Check() error {
 	config := config.GetConfig()
