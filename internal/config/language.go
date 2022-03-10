@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// language configuration
 type Language struct {
 	Id             int    `json:"id"`
 	Name           string `json:"name"`
@@ -17,6 +18,7 @@ type Language struct {
 
 var languages map[int]Language
 
+// load language from languages directory
 func loadLanguages() map[int]Language {
 	ents, err := os.ReadDir("languages")
 	if err != nil {
@@ -50,6 +52,7 @@ func loadLanguages() map[int]Language {
 	return languages
 }
 
+// get languages mapping, load it if not loaded yet
 func GetLanguages() map[int]Language {
 	if languages == nil {
 		languages = loadLanguages()

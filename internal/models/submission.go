@@ -25,6 +25,7 @@ type (
 	}
 )
 
+// check submission validity
 func (s *Submission) Check() error {
 	if s.SourceCode == nil {
 		return fmt.Errorf("source_code is required")
@@ -52,6 +53,7 @@ func (s *Submission) Check() error {
 	return nil
 }
 
+// the submission format stored in storage
 type StoredSubmission struct {
 	Token     uuid.UUID `json:"token"`
 	Timestamp time.Time `json:"timestamp"`
@@ -62,6 +64,7 @@ type StoredSubmission struct {
 	Tasks []uuid.UUID `json:"tasks"`
 }
 
+// save the submission to storage SubmissionBucket/{token}
 func (s *Submission) Save(storage *storage.Client) error {
 	languages := config.GetLanguages()
 	config := config.GetConfig()

@@ -26,11 +26,13 @@ type (
 	}
 )
 
+// check task validity
 func (t *Task) Check() error {
 	if err := t.Limits.Check(); err != nil {
 		return err
 	}
 
+	// set token and default processing result
 	t.Token = uuid.New()
 	t.Result = Result{
 		Token:     t.Token,
@@ -41,6 +43,7 @@ func (t *Task) Check() error {
 	return nil
 }
 
+// save result to TaskBucket/{token}
 func (t *Task) Save(storage *storage.Client) error {
 	config := config.GetConfig()
 	object := storage.Bucket(config.TaskBucket).Object(t.Token.String())
@@ -48,6 +51,7 @@ func (t *Task) Save(storage *storage.Client) error {
 	return StorageSave(object, t.Result)
 }
 
+// sends result callback to CallbackURL
 func (t *Task) SendCallback() {
 	if t.CallbackURL == "" {
 		return

@@ -14,6 +14,7 @@ type Limits struct {
 	Network  bool    `json:"network"`
 }
 
+// check limits validity
 func (l *Limits) Check() error {
 	config := config.GetConfig()
 

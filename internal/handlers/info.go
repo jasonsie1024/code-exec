@@ -11,17 +11,20 @@ import (
 type InfoHandler struct {
 }
 
+// register handler routes
 func (h *InfoHandler) RegisterRoutes(e *echo.Echo) {
 	e.GET("/config", h.GetConfig)
 	e.GET("/languages", h.GetLanguages)
 	e.GET("/language/:id", h.GetLanguage)
 }
 
+// handler for GET: /config
 func (h *InfoHandler) GetConfig(c echo.Context) error {
 	config := config.GetConfig()
 	return c.JSON(http.StatusOK, config)
 }
 
+// handler for GET: /languages
 func (h *InfoHandler) GetLanguages(c echo.Context) error {
 	languages := config.GetLanguages()
 
@@ -36,6 +39,7 @@ func (h *InfoHandler) GetLanguages(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+//	handler for GET: /language/{id}
 func (h *InfoHandler) GetLanguage(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

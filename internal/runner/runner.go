@@ -8,12 +8,14 @@ import (
 	"github.com/jason-plainlog/code-exec/internal/models"
 )
 
+// each runner handles the whole prepare / compile / execution of all the tasks of a submission
 type Runner struct {
 	Storage    *storage.Client
 	Submission *models.Submission
 	TempDir    string
 }
 
+// prepare, compile, execute the submission and update the result
 func (r *Runner) Handle(s *models.Submission) {
 	var err error
 
@@ -56,6 +58,7 @@ func (r *Runner) Handle(s *models.Submission) {
 	}
 }
 
+// compile according to the language configuratino
 func (r *Runner) Compile() *models.Result {
 	return &models.Result{
 		Status:    models.CompileError,
@@ -63,6 +66,7 @@ func (r *Runner) Compile() *models.Result {
 	}
 }
 
+// run the given task according to the language config
 func (r *Runner) RunTask(task *models.Task) {
 	task.Result.Status = models.Accepted
 	task.Result.Timestamp = time.Now()

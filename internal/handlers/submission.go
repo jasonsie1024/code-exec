@@ -15,12 +15,14 @@ type SubmissionHandler struct {
 	Storage *storage.Client
 }
 
+// register handler routes
 func (h *SubmissionHandler) RegisterRoutes(e *echo.Echo) {
 	e.POST("/submission", h.Create)
 	e.GET("/submission/:token", h.Get)
 	e.GET("/task/:token", h.GetTask)
 }
 
+// create submission
 func (h *SubmissionHandler) Create(c echo.Context) error {
 	// getting submission from request and check validity
 	submission := new(models.Submission)
@@ -57,6 +59,7 @@ func (h *SubmissionHandler) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, response)
 }
 
+// get submission
 func (h *SubmissionHandler) Get(c echo.Context) error {
 	token := c.Param("token")
 	config := config.GetConfig()
@@ -103,6 +106,7 @@ func (h *SubmissionHandler) Get(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+// get a specific task
 func (h *SubmissionHandler) GetTask(c echo.Context) error {
 	token := c.Param("token")
 	config := config.GetConfig()

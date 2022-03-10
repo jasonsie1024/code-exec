@@ -10,6 +10,7 @@ import (
 	"cloud.google.com/go/storage"
 )
 
+// helper function to read an object from storage
 func StorageRead(object *storage.ObjectHandle, v interface{}) error {
 	reader, err := object.NewReader(context.Background())
 	if err != nil {
@@ -32,6 +33,7 @@ func StorageRead(object *storage.ObjectHandle, v interface{}) error {
 	return err
 }
 
+// helper function to save an object to storage
 func StorageSave(object *storage.ObjectHandle, v interface{}) error {
 	data, err := json.Marshal(v)
 	if err != nil {
