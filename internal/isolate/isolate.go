@@ -82,6 +82,10 @@ func (box *Sandbox) Prepare(submission *models.Submission) error {
 }
 
 func (box *Sandbox) Run(cmd []string, limits models.Limits, stdin []byte) *models.Result {
+	// delete stdout.txt and stderr.txt if exist
+	os.Remove(box.Path + "/box/stdout.txt")
+	os.Remove(box.Path + "/box/stderr.txt")
+
 	// build up command: `isolate {boxid, limits} --run {command, arguments}`
 	args := []string{
 		"--box-id", box.Id, "--cg",
