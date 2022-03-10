@@ -1,6 +1,9 @@
 package models
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -43,4 +46,41 @@ func (t *Task) Save(storage *storage.Client) error {
 	object := storage.Bucket(config.TaskBucket).Object(t.Token.String())
 
 	return StorageSave(object, t.Result)
+}
+
+func (t *Task) SendCallback() {
+	if t.CallbackURL == "" {
+		return
+	}
+
+	body, err := json.Marshal(t.Result)
+	if err != nil {
+		return
+	}
+
+	request, err := http.NewRequest(http.MethodPut, t.CallbackURL, bytes.NewBuffer(body))
+	if err != nil {
+		return
+	}
+
+	client := &http.Client{
+		Timeout: 16 * time.Second,
+	}
+
+	// try PUT CallbackURL for at most three times
+	for i := 0; i < 3; i++ {
+		resp, err := client.Do(request)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			break
+		}
+	}
+}
+
+// update a task = update timestamp to time.now(), then save the task and send callback
+func (t *Task) Update(storage *storage.Client) error {
+	t.Result.Timestamp = time.Now()
+	err := t.Save(storage)
+	t.SendCallback()
+
+	return err
 }

@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/jason-plainlog/code-exec/internal/config"
 	"github.com/jason-plainlog/code-exec/internal/models"
+	"github.com/jason-plainlog/code-exec/internal/runner"
 	"github.com/labstack/echo/v4"
 )
 
@@ -36,6 +37,10 @@ func (h *SubmissionHandler) Create(c echo.Context) error {
 	}
 
 	// call runner to handle submission
+	runner := runner.Runner{
+		Storage: h.Storage,
+	}
+	go runner.Handle(submission)
 
 	// generating response
 	tasks := []map[string]interface{}{}
