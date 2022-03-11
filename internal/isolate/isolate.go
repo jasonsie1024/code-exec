@@ -94,6 +94,7 @@ func (box *Sandbox) Run(cmd []string, limits models.Limits, stdin []byte) *model
 		"-m", fmt.Sprint(limits.Memory), "-f", fmt.Sprint(limits.Filesize),
 		fmt.Sprintf("--processe=%d", limits.Process),
 		"-o", "stdout.txt", "-r", "stderr.txt",
+		"-E", "PATH", "-d", "/var", "-d", "/etc:noexec",
 	}
 	if limits.Network {
 		args = append(args, "--share-net")
