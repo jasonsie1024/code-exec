@@ -1,0 +1,7 @@
+{
+    "id": 4,
+    "name": "Haskell (ghc 8.8.4)",
+    "source_file": "source.hs",
+    "compile_command": "/usr/bin/ghc %s source.hs",
+    "run_command": "./source %s"
+}
