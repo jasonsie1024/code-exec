@@ -33,6 +33,9 @@ func main() {
 	if config.ApiKey != "" {
 		// enable api key check when key is provided, preventing localhost attack
 		e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+			Skipper: func(c echo.Context) bool {
+				return c.Path() != "/submission"
+			},
 			KeyLookup: "header:api-key",
 			Validator: func(key string, c echo.Context) (bool, error) {
 				return key == config.ApiKey, nil
