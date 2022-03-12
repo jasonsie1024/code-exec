@@ -132,7 +132,7 @@ func (r *Runner) RunTask(task *models.Task) {
 	lang := config.GetLanguages()[r.Submission.LanguageId]
 	// execute task by language config
 	result := box.Run([]string{
-		"/bin/sh", "-c", fmt.Sprintf(lang.RunCommand, task.CommandLineArguments),
+		"/bin/bash", "-c", fmt.Sprintf(lang.RunCommand, task.CommandLineArguments),
 	}, task.Limits, task.Stdin)
 
 	task.Result = *result
