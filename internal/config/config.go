@@ -5,6 +5,7 @@ import cfg "github.com/JeremyLoy/config"
 type Config struct {
 	// Server Configurations
 	Address    string `config:"ADDRESS" json:"-"`     // Address to listen, default to ":8000"
+	ApiKey     string `config:"API_KEY" json:"-"`     // API key validation, default to ""
 	BodyLimit  string `config:"BODY_LIMIT" json:"-"`  // Maximum request body size, default to "4M"
 	MaxSandbox int    `config:"MAX_SANDBOX" json:"-"` // Maximum isolate sandbox
 
@@ -23,6 +24,7 @@ type Config struct {
 // The default values of the config.
 var config Config = Config{
 	Address:    ":8080",
+	ApiKey:     "",
 	BodyLimit:  "4M",
 	MaxSandbox: 1000,
 
