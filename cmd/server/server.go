@@ -30,6 +30,15 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.BodyLimit(config.BodyLimit))
+	if config.ApiKey != "" {
+		// enable api key check when key is provided, preventing localhost attack
+		e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+			KeyLookup: "header:api-key",
+			Validator: func(key string, c echo.Context) (bool, error) {
+				return key == config.ApiKey, nil
+			},
+		}))
+	}
 
 	// initizlize handlers & register routes
 	infoHandler := handlers.InfoHandler{}
