@@ -1,5 +1,5 @@
 {
-    "id": 7,
+    "id": 8,
     "name": "Rust (rustc 1.48.0)",
     "source_file": "source.rs",
     "compile_command": "/usr/bin/rustc source.rs",
