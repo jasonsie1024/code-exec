@@ -1,0 +1,7 @@
+{
+    "id": 5,
+    "name": "Ruby 2.7.4",
+    "source_file": "source.rb",
+    "compile_command": null,
+    "run_command": "/usr/bin/ruby source.rb %s"
+}

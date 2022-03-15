@@ -1,0 +1,7 @@
+{
+    "id": 6,
+    "name": "Lua 5.4.2",
+    "source_file": "source.lua",
+    "compile_command": null,
+    "run_command": "/usr/bin/lua source.lua %s"
+}
