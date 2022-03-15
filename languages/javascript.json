@@ -1,0 +1,7 @@
+{
+    "id": 7,
+    "name": "Javascript (node v12.22.5)",
+    "source_file": "source.js",
+    "compile_command": null,
+    "run_command": "/usr/bin/node source.js"
+}

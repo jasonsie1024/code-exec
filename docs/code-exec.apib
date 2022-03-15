@@ -3,9 +3,9 @@ FORMAT: 1A
 # CodeExec API Documentation
 
 ## About
-[CodeExec API]() is an Online Code Execution API that allows users to run arbitrary code without installing compilers/interpreters, and is much safer for those who wanted to build a service that requires running untrusted code, for example, an Online Judge or Online IDE.
+[CodeExec API](https://code-exec.dev) is an Online Code Execution API that allows users to run arbitrary code without installing compilers/interpreters, and is much safer for those who wanted to build a service that requires running untrusted code, for example, an Online Judge or Online IDE.
 
-CodeExec was inspired by [Judge0 API](https://judge0.com/), and after redesigning service architecture and adopting cloud computing services, we're able to provide an Online Code Execution API at a lower price with higher scalability and performance.
+CodeExec was inspired by Judge0 API, and after redesigning service architecture and adopting cloud computing services, we're able to provide an Online Code Execution API at a lower price with higher scalability and performance.
 
 <br/>
 
@@ -20,17 +20,19 @@ You may visit [CodeExec API on RapidAPI](https://rapidapi.com/codeexec-codeexec-
 ## Submission [/submission]
 
 ## Create Submission [POST]
-Create submission with multiple tasks. The request should be a valid submission:
+Create submission with multiple tasks, each submission will be compiled (if needed), then run with each task environment specified, the result can be queried or send back with a webhook. The request should be a valid submission:
 
 **Submission**
 
 | Name (*required) | Description |
 | ---- | ----------- |
 | `source_code` * | The base64 encoded source code to be compiled and executed |
-| `language_id` * | The id of the language that source code is written in, look [language section](#server-configurations-language) for more information. | 
+| `language_id` * | The id of the language that source code is written in, look [language section](#server-configurations-language) for more information. The maximum number of tasks one submission may have is limited by the configuration, see [server configuration](#server-configurations-configuration-information-get) for more information. | 
 | `tasks` * | The tasks to be run, the task format is explaned below |
 | `compile_options` | The extra arguments that will be passed to the compiler |
 | `additional_files` | The base64 encoded content of the zip file that will be extracted before compilation and execution. |
+
+
 
 **Task**
 
@@ -85,6 +87,7 @@ If any value is not valid, a `400 Bad Request` response is returned with a messa
             }
 
 ## Get Submission [GET /submission/{token}]
+After a submission is successfully created, the submission token and task tokens are returned, you may use the submission token to retrieve the submission result. In the submission result, the basic information about each task result is returned, for example: the status and time/memory consumption and the token of each task.
 
 + Parameters
     + token (string) ... The unique token for the submission
@@ -115,6 +118,7 @@ If the submission doesn't exist, a `404 Not Found` error is returned.
 ## Task [/task]
 
 ### Get Task [GET /task/{token}]
+For more specific result information, you may query each task with the task token, the full information of the task result will be returned, which includes the `stdout`, `stderr`, `exitcode` and time/memory consumption, along with the status message and the timestamp of the result.
 
 + Parameters
     + token (string) ... The unique token for the Submission
